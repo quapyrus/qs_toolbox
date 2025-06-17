@@ -1,6 +1,16 @@
 # qs_toolbox
 
 
+个人脚本工具整理，不定期更新
+
+## tampermonkey
+- FoldingDeepSeek.js #DeepSeek长文本折叠
+
+
+
+
+
+# ===============================================
 
 ## Getting started
 
