@@ -19,57 +19,82 @@
     return
   }
 
-  function getRoot() { return document.querySelectorAll('.scrollable')[1].firstChild.firstChild.children }
+  function getRoot() { return Array.from(document.querySelectorAll('div.scrollable>div:has(div>textarea#chat-input)>div:first-child>div')) }
 
   function init() {
+    const elEvent = document.querySelector('div:has(>div>div.scrollable textarea#chat-input)') || document.querySelector('div#root>div.ds-theme div:has(>div>div>div>div>div>div>textarea#chat-input)')
+    elEvent.addEventListener('click', (event) => {
+      const target = event.target.closest('div')
+      if (!target.matches('div:has(>svg:only-child[viewBox="0 0 30 30"]>path:only-child[fill="#4D6BFE"][fill-rule="nonzero"])')) {
+        return
+      }
+      const root = target.parentElement
+      var btnCollapse = target.parentElement.querySelector('div.ds-flex qs-icon[name$=up]')
+      if (!btnCollapse) {
+        insertFoldingActionBtn(root)
+      }
+      QsIcon.toggleFolding(event, !root.matches('.qs-collapse'), root)
+    })
+
+
+    // 插入导航面板和QsIcon模板
     document.getElementById('root').insertAdjacentHTML('beforeend', QsIcon.html)
+
     const root = getRoot()
     for (var i = 1, length = root.length; i < length; i += 2) {
-      root[i].classList.add('qs-question')
-      const actions = root[i].lastChild
+      insertFoldingActionBtn(root[i])
+    }
+
+    /// 插入单个回答折叠/展开按钮
+    function insertFoldingActionBtn(root) {
+      root.classList.add('qs-answer')
+      const actions = root.querySelector('.ds-flex')
+      if (!actions) {
+        return
+      }
       actions.firstChild.insertAdjacentHTML('afterbegin', '<qs-icon name="push-chevron-up" @click="toggleFolding"/>')
       actions.insertAdjacentHTML('afterbegin', '<qs-icon name="push-chevron-down" @click="toggleFolding"/>')
     }
 
+
+
+    // const config = { childList: true, subtree: true }
+    // const observer = new MutationObserver(fnMutationObserver)
+    // observer.observe(document.querySelectorAll('.scrollable')[1], config)
+    // // observer.disconnect()
+    // function fnMutationObserver(mutationsList, observer) {
+    //   if( !document.querySelector('qs-icon[name=qs-folding]').expand) {
+    //     return
+    //   }
+    //   for(var mutation of mutationsList) {
+    //     if (mutation.type === 'childList') {
+    //       console.log('A child node has been added or removed.', mutationsList);
+    //     }
+    //   }
+    // }
+
+
+
+
+
+    // 插入导航面板内容
     QsIcon.buildNavigation = () => {
       const root = getRoot()
       const items = []
-      for (var i = 0, length = root.length >> 1; i < length; i++) {
-        root[i << 1].id = `qs-question-${i}`
-        const question = root[i << 1].firstChild.textContent
+    for (var i = 0, length = root.length; i < length; i += 2) {
+        const index = i >> 1;
+        root[i].id = `qs-question-${index}`
+        const question = root[i].textContent
 //        console.log('DeepSeek折叠：', root[i], `qs.navigation[$i] == `, question)
         items.push(`
-<a id="qs-item-${i}" class="qs-item" href="#qs-question-${i}" title="${question}">
+<a id="qs-item-${i}" class="qs-item" href="#qs-question-${index}" title="${question}">
   ${question}
 </a>`)
       }
       document.getElementById('qs-container').innerHTML = items.join('')
     }
 
-
-
-    const config = { childList: true, subtree: true }
-    const observer = new MutationObserver(fnMutationObserver)
-    observer.observe(document.querySelectorAll('.scrollable')[1], config)
-    // observer.disconnect()
-
-   function fnMutationObserver(mutationsList, observer) {
-
-if( !document.querySelector('qs-icon[name=qs-folding]').expand) {
-return
-}
-
-        for(var mutation of mutationsList) {
-            if (mutation.type === 'childList') {
-                console.log('A child node has been added or removed.', mutationsList);
-            }
-        }
-    }
-
-
-
-
-
+    // 展开/折叠导航面板
     QsIcon.toggleNavFolding = (_, target) => {
       const expand = target.parentNode.host.expand = !target.parentNode.host.expand
       //              if (() !== (name === 'chevron-down')) {
@@ -86,22 +111,29 @@ return
       }
     }
 
-    QsIcon.toggleFolding = (e, target, root) => {
-      if (!root) {
-        root = target.parentNode.host.closest('.qs-question')
+    // 展开/折叠回答
+    QsIcon.toggleFolding = (_, target, root) => {
+      var flagFolding
+      if (typeof target === 'boolean') {
+        flagFolding = target
+      } else {
+        if (!root) {
+          root = target.parentNode.host.closest('.qs-answer')
+        }
+        flagFolding = target.matches('[name$=up]')
       }
-      const flagFolding = target.matches('[name$=up]')
       if (flagFolding) {
         root.classList.add('qs-collapse')
       } else {
         root.classList.remove('qs-collapse')
       }
-      const first = Array.from(root.children).find((v, i) => i >= 1 && i < 4 && v.childElementCount >= 1)
-      if (first && (flagFolding == first.childElementCount > 1)) {
+      const first = root.querySelector('div.ds-markdown')?.previousElementSibling
+      if (first && (flagFolding === first.childElementCount > 1)) {
         first.firstChild.click()
       }
     }
 
+    // 展开/折叠所有回答
     QsIcon.toggleAllFolding = (_, target) => {
       const root = getRoot()
       for (var i = 1, length = root.length; i < length; i += 2) {
@@ -110,6 +142,7 @@ return
     }
   }
 
+  // 定义 ShadowDOM
   class QsIcon extends HTMLElement {
     constructor() {
       super()
@@ -160,9 +193,14 @@ return
   <div id="qs-container" style="display: none"></div>
 </div>
 <style>
+  /** logo **/
+  div:not(.qs-collapse)>div:has(>svg:only-child[viewBox="0 0 30 30"]>path:only-child[fill="#4D6BFE"][fill-rule="nonzero"]) {
+    height: 100%;
+    border-radius: unset;
+  }
   #qs-navigation {
     position: fixed;
-    right: 16px;
+    right: 48px;
     z-index: 9999;
     background: rgba(102, 204, 255, 0.3);
   }
@@ -175,6 +213,11 @@ return
     width: 300px;
     max-height: 300px;
     padding: 0 8px 8px;
+  }
+
+  qs-icon {
+    width: 24px;
+    height: 24px;
   }
 
   .qs-item {
