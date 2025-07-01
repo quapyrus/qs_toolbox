@@ -234,6 +234,9 @@
     max-height: 200px;
     overflow: auto;
   }
+  .qs-collapse:has(qs-icon[name$=down])>div:not(.ds-markdown,.ds-flex) {
+    display: none;
+  }
 
   .qs-collapse>div.ds-flex:last-child>div.ds-flex:nth-child(2)>:first-child[name$=up] {
     display: none;
