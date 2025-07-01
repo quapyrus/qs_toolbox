@@ -252,7 +252,7 @@
 </div>
 <style>
 
-  div#qs-navigation:not(.qs-Deepseek-Chat-Monitor)>div>button#qs-Deepseek-Chat-Monitor] {
+  div#qs-navigation:not(.qs-Deepseek-Chat-Monitor)>div>button#qs-Deepseek-Chat-Monitor {
     display: none;
   }
   #toggle-button{
