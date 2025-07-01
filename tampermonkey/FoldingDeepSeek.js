@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         DeepSeek折叠
-// @namespace    http://tampermonkey.net/
+// @namespace    https://greasyfork.org/users/1490581
 // @version      2025-06-16
 // @description  TL;DR: 超弦领域折叠装置，启动！将DeepSeek酱的知识洪流压缩进克莱因瓶的口袋宇宙吧(◕ᴗ◕✿)
 // @author       quapyrus
