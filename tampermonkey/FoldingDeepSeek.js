@@ -1,8 +1,10 @@
 // ==UserScript==
 // @name         FoldingDeepSeek
+// @name:zh-CN   DeepSeek折叠
 // @namespace    https://greasyfork.org/users/1490581
 // @version      1.1.1
 // @description  TL;DR: 超弦领域折叠装置，启动！将DeepSeek酱的知识洪流压缩进克莱因瓶的口袋宇宙吧(◕ᴗ◕✿)
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=deepseek.com
 // @match        https://chat.deepseek.com/*
 // @author       quapyrus
 // @supportURL   https://github.com/quapyrus/qs_toolbox/issues
