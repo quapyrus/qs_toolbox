@@ -19,6 +19,24 @@
     return
   }
 
+
+  function setFoldingDeepseekChatMonitor() {
+    const ids = ['plugin-ui', 'return-button', 'toggle-button','copy-button', 'history-button']
+    const exists = document.getElementById(ids[0])
+    if (!exists) {
+      return
+    }
+    document.getElementById('return-button').setAttribute('style', document.getElementById('toggle-button').getAttribute('style'))
+    toggle()
+    document.getElementById('qs-Deepseek-Chat-Monitor').addEventListener('click', toggle)
+    document.getElementById('qs-navigation').classList.add('qs-Deepseek-Chat-Monitor')
+    
+    function toggle() {
+      const hidden = exists.style.display === 'none'
+      ids.forEach((v) => document.getElementById(v).style.display = hidden ? '' : 'none')
+    }
+  }
+
   function getRoot() { return Array.from(document.querySelectorAll('div.scrollable>div:has(div>textarea#chat-input)>div:first-child>div')) }
 
   function init() {
@@ -39,6 +57,7 @@
 
     // 插入导航面板和QsIcon模板
     document.getElementById('root').insertAdjacentHTML('beforeend', QsIcon.html)
+    setFoldingDeepseekChatMonitor()
 
     const root = getRoot()
     for (var i = 1, length = root.length; i < length; i += 2) {
@@ -76,6 +95,39 @@
 
 
 
+
+    QsIcon.removeHistory = async () => {
+      const curr = document.querySelector('div.scrollable div.b64fb9ae[tabindex]>div[tabindex]:has(>div.ds-icon:only-child>svg:only-child)')
+      if (!curr) {
+        document.querySelector('div.scrollable div>div[tabindex]:has(>div[tabindex]>div.ds-icon:only-child>svg:only-child)').click()
+        return
+      }
+      
+      var next = curr.parentElement.nextElementSibling
+      while (next && !next.matches('div>div[tabindex]:has(>div[tabindex]>div.ds-icon:only-child>svg:only-child)')) {
+        next = next.nextElementSibling
+      }
+      for (var i = curr.parentElement.parentElement; !next && (i = i.nextElementSibling); ) {
+        next = i.querySelector('div>div[tabindex]:has(>div[tabindex]>div.ds-icon:only-child>svg:only-child)')
+      }
+      
+      curr.click()
+      await new Promise(resolve => setTimeout(resolve, 100))
+      document.querySelector('.ds-floating-position-wrapper.ds-theme>.ds-dropdown-menu.ds-elevated[role=menu]>.ds-dropdown-menu-option.ds-dropdown-menu-option--error').click()
+      if (next) {
+        for (var i = 0; i < 30 * 10; ++i) {
+          await new Promise(resolve => setTimeout(resolve, 100))
+          if (!document.querySelector('div.scrollable div.b64fb9ae[tabindex]>div[tabindex]:has(>div.ds-icon:only-child>svg:only-child)')) {
+            next.click()
+            if (document.getElementById('qs-container').style.display !== 'none') {
+              await new Promise(resolve => setTimeout(resolve, 500))
+              QsIcon.buildNavigation();
+            }
+            break
+          }
+        }
+      }
+    }
 
     // 插入导航面板内容
     QsIcon.buildNavigation = () => {
@@ -186,6 +238,8 @@
 <div id="qs-navigation">
   <div>
     <qs-icon name="sync" @click="buildNavigation" title="刷新导航" style="display: none"></qs-icon>
+    <button type="button" id="qs-Deepseek-Chat-Monitor" title="Deepseek Chat Monitor">🕒</button>
+    <qs-icon name="deepseek-remove" @click="removeHistory" title="删除此对话"></qs-icon>
     <qs-icon name="push-chevron-up" @click="toggleAllFolding" title="折叠全部回答"></qs-icon>
     <qs-icon name="push-chevron-down" @click="toggleAllFolding" title="展开全部回答"></qs-icon>
     <qs-icon name="qs-folding" @click="toggleNavFolding" title="展开/收起导航"></qs-icon>
@@ -193,6 +247,16 @@
   <div id="qs-container" style="display: none"></div>
 </div>
 <style>
+
+  div#qs-navigation:not(.qs-Deepseek-Chat-Monitor)>div>button#qs-Deepseek-Chat-Monitor] {
+    display: none;
+  }
+  #toggle-button{
+    display: none!important;
+  }
+  // #plugin-ui{
+  //   top: 40px!important;
+  // }
   /** logo **/
   div:not(.qs-collapse)>div:has(>svg:only-child[viewBox="0 0 30 30"]>path:only-child[fill="#4D6BFE"][fill-rule="nonzero"]) {
     height: 100%;
@@ -201,7 +265,7 @@
   #qs-navigation {
     position: fixed;
     right: 48px;
-    z-index: 9999;
+    z-index: 999999;
     background: rgba(102, 204, 255, 0.3);
   }
   #qs-navigation>div:first-child {
@@ -260,6 +324,9 @@
 //  }
 </style>
 <template id="template-qs-icon">
+    <svg name="deepseek-remove" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M5.3948 8.24785C5.89262 8.21027 6.32593 8.58498 6.36058 9.083L6.91194 17.0084V17.0423C6.91194 18.562 8.1119 19.8099 9.60009 19.8099H14.4119C15.905 19.8099 17.1001 18.563 17.1001 17.0423V17.009L17.6407 9.08428C17.6747 8.58626 18.1074 8.21098 18.6053 8.24783C19.099 8.28438 19.4706 8.71284 19.4369 9.20682L18.9 17.0774C18.8817 19.6322 16.8736 21.6849 14.4119 21.6849H9.60009C7.14544 21.6849 5.13073 19.6335 5.11207 17.0781L4.56455 9.20795C4.53019 8.71406 4.90112 8.28511 5.3948 8.24785Z" fill="currentColor"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M21 5.75C21 6.26777 20.5803 6.6875 20.0625 6.6875H3.9375C3.41973 6.6875 3 6.26777 3 5.75C3 5.23223 3.41973 4.8125 3.9375 4.8125H20.0625C20.5803 4.8125 21 5.23223 21 5.75Z" fill="currentColor"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M10.2 10.75C10.6971 10.75 11.1 11.1529 11.1 11.65L11.1 16.1C11.1 16.5971 10.6971 17 10.2 17C9.70299 17 9.30005 16.5971 9.30005 16.1L9.30005 11.65C9.30005 11.1529 9.70299 10.75 10.2 10.75Z" fill="currentColor"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M13.7999 10.75C14.297 10.75 14.6999 11.1529 14.6999 11.65L14.6999 16.1C14.6999 16.5971 14.297 17 13.7999 17C13.3028 17 12.8999 16.5971 12.8999 16.1L12.8999 11.65C12.8999 11.1529 13.3028 10.75 13.7999 10.75Z" fill="currentColor"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M9.37093 2.87988C9.53733 2.5331 9.88788 2.3125 10.2725 2.3125H13.7269C14.1114 2.3125 14.462 2.53305 14.6284 2.87977L15.8048 5.33074L14.1949 6.16926L13.2436 4.1875H10.7558L9.80489 6.16916L8.19482 5.33084L9.37093 2.87988Z" fill="currentColor"></path></svg>
+    
+    
     <!-- https://css.gg/icon/ -->
 
     <svg name="chevron-down"
